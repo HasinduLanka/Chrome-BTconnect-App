@@ -1,4 +1,4 @@
-$(function() {
+$(function () {
 	printBTLog("Chrome BT App 0.1");
 	printBTLog(" - Use https://developer.chrome.com/apps/app_bluetooth for all operations");
 	printBTLog(" - This App uses the chrome.bluetoothSocket APIs");
@@ -10,29 +10,29 @@ $(function() {
 	var btDeviceSelect = $('#btDeviceSelect');
 
 
-	var socketID         = 0;
-	
-	var deviceArray      = {};
-	var device_names     = {};
+	var socketID = 0;
+
+	var deviceArray = {};
+	var device_names = {};
 	var device_Addresses = {};
-	var deviceCount      = 0;
-	var deviceOffset     = 0;
+	var deviceCount = 0;
+	var deviceOffset = 0;
 
 	var screenWidth = screen.availWidth;
 	var screenHeight = screen.availHeight;
 
-//  Start up Code	
+	//  Start up Code	
 
-	var addDeviceName = function(device) {
+	var addDeviceName = function (device) {
 		deviceArray[deviceCount++] = device;
-//                var btDeviceName = device.name;
-//                $('<option></option>').text(btDeviceName).appendTo(btDeviceSelect);
-        $('<option></option>').text(device.name).appendTo(btDeviceSelect);
+		//                var btDeviceName = device.name;
+		//                $('<option></option>').text(btDeviceName).appendTo(btDeviceSelect);
+		$('<option></option>').text(device.name).appendTo(btDeviceSelect);
 	}
-	var updateDeviceName = function(device) {
+	var updateDeviceName = function (device) {
 		printBTLog('  Have a device update - ' + device.name);
 	}
-	var removeDeviceName = function(device) {
+	var removeDeviceName = function (device) {
 		delete device_names[device.address];
 	}
 	// Add listeners to receive newly found devices and updates
@@ -40,35 +40,35 @@ $(function() {
 	chrome.bluetooth.onDeviceAdded.addListener(addDeviceName);
 	chrome.bluetooth.onDeviceChanged.addListener(updateDeviceName);
 	chrome.bluetooth.onDeviceRemoved.addListener(removeDeviceName);
-	
-    // Get the list of paired devices.
-//	printBTLog("");
-//	chrome.bluetooth.getDevices(function(devices) {
-//		for (var i = 0; i < devices.length; i++) {
-//		    printBTLog('Found: ' + device[i].name);
-//		    deviceArray[deviceCount++] = device[i];
-//			$('<option></option>').text(device[i].name).appendTo(btDeviceSelect);
-//		    updateDeviceName(devices[i]);
-//		}
-//    });
-	chrome.bluetooth.startDiscovery(function() {
-	// Stop discovery after 3 seconds.
-//        printBTLog('Starting Bluetooth Device Scan.');
-        setTimeout(function() {
-            chrome.bluetooth.stopDiscovery(function() {});
-//            printBTLog('Finished Scanning for Bluetooth Devices.');
-            $('#selectedBTDevice').empty().text(btDeviceSelect.val());
-        }, 30000);
-    });
-	
 
-	
-//  Functions	
-	function convertArrayBufferToString (buf) {
+	// Get the list of paired devices.
+	//	printBTLog("");
+	//	chrome.bluetooth.getDevices(function(devices) {
+	//		for (var i = 0; i < devices.length; i++) {
+	//		    printBTLog('Found: ' + device[i].name);
+	//		    deviceArray[deviceCount++] = device[i];
+	//			$('<option></option>').text(device[i].name).appendTo(btDeviceSelect);
+	//		    updateDeviceName(devices[i]);
+	//		}
+	//    });
+	chrome.bluetooth.startDiscovery(function () {
+		// Stop discovery after 3 seconds.
+		printBTLog('Starting Bluetooth Device Scan.');
+		setTimeout(function () {
+			chrome.bluetooth.stopDiscovery(function () { });
+			printBTLog('Finished Scanning for Bluetooth Devices.');
+			$('#selectedBTDevice').empty().text(btDeviceSelect.val());
+		}, 30000);
+	});
+
+
+
+	//  Functions	
+	function convertArrayBufferToString(buf) {
 		return String.fromCharCode.apply(null, new Uint8Array(buf));
 	}
 
-	function convertArrayBufferToDumpString (buf) {
+	function convertArrayBufferToDumpString(buf) {
 		var dumpString = '['
 		var charArray = new Uint8Array(buf);
 		for (var i = 0; i < charArray.length; i++) {
@@ -79,7 +79,7 @@ $(function() {
 		return dumpString;
 	}
 
-	function convertStringToArrayBuffer (str) {
+	function convertStringToArrayBuffer(str) {
 		var buf = new ArrayBuffer(str.length);
 		var bufView = new Uint8Array(buf);
 		for (var i = 0; i < str.length; i++) {
@@ -99,7 +99,7 @@ $(function() {
 	function printConnectionBTLog(id, msg) {
 		printBTLog('(' + id + ') ' + msg);
 	}
-			
+
 
 	$('#btDeviceSelect')
 		.change(function () {
@@ -108,8 +108,8 @@ $(function() {
 
 	$('#btConnect')
 		.click(function () {
-			var btDeviceName    = $('#btDeviceSelect').val();
-			    deviceOffset    = $("#btDeviceSelect")[0].selectedIndex;
+			var btDeviceName = $('#btDeviceSelect').val();
+			deviceOffset = $("#btDeviceSelect")[0].selectedIndex;
 			var btDeviceAddress = deviceArray[deviceOffset].address;
 			printBTLog('');
 			printBTLog('Starting Connection to ' + btDeviceName);
@@ -118,39 +118,39 @@ $(function() {
 				return;
 			}
 			else if (!socketID) {
-				chrome.bluetoothSocket.create(function(createInfo) {
-				    if (chrome.runtime.lastError) {
+				chrome.bluetoothSocket.create(function (createInfo) {
+					if (chrome.runtime.lastError) {
 						AddConnectedSocketId(socketID = 0);
 						printBTLog("Socket Create Failed: " + chrome.runtime.lastError.message);
 					}
 					else {
 						socketID = createInfo.socketId;
 						chrome.bluetoothSocket.connect(createInfo.socketId,
-						    btDeviceAddress, "1101", onConnectedCallback);
+							btDeviceAddress, "1101", onConnectedCallback);
 					}
 				});
 				if (chrome.runtime.lastError) {
-				    AddConnectedSocketId(socketID = 0);
+					AddConnectedSocketId(socketID = 0);
 					printBTLog("Connection Operation failed: " + chrome.runtime.lastError.message);
-				} 
+				}
 			}
 			else {
 				printBTLog('Already connected.');
 			}
 		});
-		var onConnectedCallback = function() {
-				if (chrome.runtime.lastError) {
-						AddConnectedSocketId(socketID = 0);
-						printBTLog("Connection failed: " + chrome.runtime.lastError.message);
-				}
-				else {
-						// Profile implementation here.
-						printBTLog("Connected with socketID = " + socketID);
-						AddConnectedSocketId(socketID);
-						$('#socketId').text(socketID);
-						$('#btStatus').text("Connected");
-				}
+	var onConnectedCallback = function () {
+		if (chrome.runtime.lastError) {
+			AddConnectedSocketId(socketID = 0);
+			printBTLog("Connection failed: " + chrome.runtime.lastError.message);
 		}
+		else {
+			// Profile implementation here.
+			printBTLog("Connected with socketID = " + socketID);
+			AddConnectedSocketId(socketID);
+			$('#socketId').text(socketID);
+			$('#btStatus').text("Connected");
+		}
+	}
 
 	$('#btDisconnect')
 		.click(function () {
@@ -159,11 +159,11 @@ $(function() {
 				printBTLog('Disconnecting connection id ' + socketID + '...');
 				chrome.bluetoothSocket.disconnect(socketID);
 				if (chrome.runtime.lastError) {
-				    printBTLog("Disconnect failed: " + chrome.runtime.lastError.message);
+					printBTLog("Disconnect failed: " + chrome.runtime.lastError.message);
 				}
 				else {
 					printBTLog('Disconnect successful');
-				    AddConnectedSocketId(0);
+					AddConnectedSocketId(0);
 					$('#socketId').text("-");
 					$('#btStatus').text("Disconnected");
 				}
@@ -177,7 +177,7 @@ $(function() {
 
 	$('#btGetDevice')
 		.click(function () {
-		    deviceOffset   = $("#btDeviceSelect")[0].selectedIndex;
+			deviceOffset = $("#btDeviceSelect")[0].selectedIndex;
 			var deviceInfo = deviceArray[deviceOffset];
 			printBTLog("");
 			printBTLog(deviceArray[deviceOffset].name + " Has Address " + deviceInfo.address);
@@ -204,7 +204,7 @@ $(function() {
 			}
 			if (chrome.runtime.lastError) {
 				printBTLog("getDevice Operation failed: " + chrome.runtime.lastError.message);
-			} 
+			}
 		});
 
 	$('#btSendMessage')
@@ -216,9 +216,9 @@ $(function() {
 				var txbuffer = convertStringToArrayBuffer(txstring);
 
 				chrome.bluetoothSocket.send(socketID, txbuffer, function (bytes_sent) {
-				    if (chrome.runtime.lastError) {
-					    printBTLog("send Operation failed: " + chrome.runtime.lastError.message);
-				    } 
+					if (chrome.runtime.lastError) {
+						printBTLog("send Operation failed: " + chrome.runtime.lastError.message);
+					}
 					else {
 						printBTLog('Sent ' + bytes_sent + ' bytes');
 					}
@@ -226,7 +226,7 @@ $(function() {
 			}
 			else {
 				printBTLog('Not connected.');
-			}			
+			}
 		});
 
 	var rxbuilder = '';
